@@ -2,3 +2,5 @@
 test
 train
 newimg
+best_acc.pt
+bset_loss.pt
