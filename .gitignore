@@ -1,6 +1,6 @@
 .ipynb_checkpoints
-test
-train
+*.csv
 newimg
-best_acc.pt
-bset_loss.pt
+newimg2
+*.pt
+
