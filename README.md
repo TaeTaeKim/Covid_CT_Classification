@@ -2,46 +2,54 @@
 
 ## 모델링에서 사용한 방법
 
-### 정확한 모델 평가를 위해 Random seed를 고정 ==> 2022
+1. 정확한 모델 평가를 위해 Random seed를 고정 ==> 2022
 
-### 이미지 사이즈를 조정 ==> 128, 384(최대)
+2. 이미지 사이즈를 조정 ==> 128, 384(최대)
+    - 이미지를 Resize로 줄이지 않고 높게 잡을수록 정확도는 향상되는 듯
+    - 하지만 이미지가 커질수록 gpu memory에러가 날 확률이 높아 batch size가 줄어들고 학습시간이 늘어남.
 
-### 최저 validation loss와 Best accuracy모델 두가지를 저장하여 예측결과 도출
+3. 최저 validation loss와 Best accuracy모델 두가지를 저장하여 예측결과 도출
 
-### Img Augmentation : 
+4. Img Augmentation
 
+5. 다양한 모델 사용
 
-#### 랜덤한 두 사진을 뽑아 수직, 수평 결함 : https://github.com/TaeTaeKim/Covid_CT_Classification/blob/Covid/make_newimg.ipynb
+## Image Augmentation
 
-#### 기본적으로 train val 개수는 각각 600,40개정도
+- 기본적으로 train val 개수는 각각 600,40개정도
 
- #### 첫 번째 :
-  - 원본 train data 만을 이용해서 image augment적용,augmetation은 약 2000장정도 진행
-  - 하지만 train data만 많이 늘어나서 그런지 과적합이 빨리 일어났음.
+- 랜덤한 두 사진을 뽑아 수직, 수평 결함 : https://github.com/TaeTaeKim/Covid_CT_Classification/blob/Covid/make_newimg.ipynb
+    - label이 같은 사진을 각각 2장씩 뽑아서 수직결합으로 한장, 수평결합으로 한장을 생성
+
+- 첫 번째 방법
+   - 원본 train data 전체를 이용해서 image augment적용,augmetation은 약 20000장정도 진행
  
- #### 두 번쨰:
- - val에 원본사진 400장정도를 넣고 나머지 200장으로 augment를 진행 train1200장 val400장 정도로 실험을 진행
+ - 두 번쨰 방법
+   - val에 원본사진 400장정도를 넣고 나머지 200장으로 augment를 진행 train1200장 val400장 정도로 실험을 진행
 
-### Accuracy를 높이기 위한 여러 모델 설정: Resnet50, Alexnet, Custom한 CNN
- #### Resnet50: 사전학습 되지 않은 모델을 사용하여 Train함 마지막 num class를 1로하고 sigmoid와 BCELoss를 활용한 학습
+## 다양한 모델 사용
 
- #### Alexnet50: 사전학습 되지 않은 모델을 사용하여 Train, num class를 1로하고 sigmoid함수와 BCELoss를 활용한 학습
- - image agument를 이용, 학습 데이터를 2만개로 늘리고 학습했을 때 가장 높은 accuracy를 이용 ==> 0.8의 정확도
- - 과적합을 막기위해 bottleneck의 최종 conv이후에 dropouit2d 0.25를 이용,(downsample layer에는 미적용) 규제가 너무 강했는지 Train data loss도 쉽게 낮아지지 않았음.
+### Resnet50:
+    - 대회 규정에 의해 Pretrain되지 않은 모델을 불러와서 사용
+    - 모델을 조금 수정하여 num class를 1로하고 output에 sigmoid함수를 적용 Binary Cross Entropy를 이용한 학습을 진행
+    - 20000장의 Augment된 img를 학습하여서 0.8의 성능을 보임. 나머지 조정에서는 이하의 정확도
+    - 과적합을 막기위해 bottleneck의 output마다 dropout2d를 0.25씩 줌.
 
- #### Custom CNN :
- - 기존 baseline모델을 그대로 사용했을 경우에는 0.76의 성능을 보임.
- - batch norm이나 dropout없이
+### Alexnet50:
+    - 역시 사전학습 안된 모델 사용, num class와 loss를 Resnet50과 동일하게 설정 후 학습
+    - 역시 20000장의 학습데이터로 했을 때 가장 좋은 성적을 보이지만 0.76에 그침
+    - 20000장의 데이터로 학습시 과적합을 보여 Dropout과 batchnorm을 추가하였지만 규제가 너무 강한지 Train loss도 쉽게 낮아지지 않음.
+
+### GoogLeNet:
+    - 역시 num class와 loss를 동일하게 설정, aux1,aux2 loss에 0.3의 가중치를 놓고 train loss를 계산
+    - 첫번째 시도: 모델을 수정하지 않고 data augmetation 방법 2를 적용해서 진행 ==> Overfitting이 발생했고 validation loss가 떨어지지 않음
+    - 두번째 시도: 모델을 수정하지 않고 data augmetation 방법 1을 적용해서 진행 ==> train과 Vadlidation에서 모두 overfitting이 일어나지만 0.83의 정확도를 보임.
+    - 할것 ! inception사이에서 전해주기전에 dropout을 적용 후 train upsample dataset으로 돌리기
+    - 할것 ! dropout된 모델을 full upsample dataset으로 돌리기
+    - 할것 ! image aug를 사각형으로 만들것
  
- #### GoogLeNet:
- - num class를 1로 하고 모델에 맞게 Train함수를 수정함 <u>3개의 loss중에서 aux1, aux2 loss에 0.3의 가중치를 두고 loss를 계산.</u>
- - 첫번째 시도에서는 모델 num class만 수정하고 모델을 그대로 진행 ==> 과적합이 일어나고 val loss가 떨어지지 않음
- - 두번째 시도에서는 dataset을 전체 15000개까지 upsample하고 split하여서 진행 ==> 8.33의 정확도달성
- - 할것 ! inception사이에서 전해주기전에 dropout을 적용 후 train upsample dataset으로 돌리기
- - 할것 ! dropout된 모델을 full upsample dataset으로 돌리기
- - 할것 ! image aug를 사각형으로 만들기
- - 최종 pred는 output을 이용한 계산.
+ ## 그외 파라미터 조정
  
- ### 그외 파라미터 조정
- #### seed값을 조정해봄
- #### threshold를 조정해봄 기존 0.5에서 0.4~0.6사이값으로 조정
+ ### seed값을 조정해봄
+ 
+ ### threshold를 조정해봄 기존 0.5에서 0.4~0.6사이값으로 조정
