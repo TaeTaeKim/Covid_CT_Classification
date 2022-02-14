@@ -39,17 +39,20 @@
     - 역시 사전학습 안된 모델 사용, num class와 loss를 Resnet50과 동일하게 설정 후 학습
     - 역시 20000장의 학습데이터로 했을 때 가장 좋은 성적을 보이지만 0.76에 그침
     - 20000장의 데이터로 학습시 과적합을 보여 Dropout과 batchnorm을 추가하였지만 규제가 너무 강한지 Train loss도 쉽게 낮아지지 않음.
+    
+    - GoogLeNet에서 다시 AlexNet의 깊지 않은 모델로 넘어와 학습재개
+        1. Alex모델 수정없이 + Test set만 augmetation함. ==> 여전히 과적합으로 validation loss가 올라가지 않음.
+        2. Alex모델 수정(batchnorm,dropout) + Test set만 aug
 
 ### GoogLeNet:
     - 역시 num class와 loss를 동일하게 설정, aux1,aux2 loss에 0.3의 가중치를 놓고 train loss를 계산
     - 첫번째 시도: 모델을 수정하지 않고 data augmetation 방법 2를 적용해서 진행 ==> Overfitting이 발생했고 validation loss가 떨어지지 않음
     - 두번째 시도: 모델을 수정하지 않고 data augmetation 방법 1을 적용해서 진행 ==> train과 Vadlidation에서 모두 overfitting이 일어나지만 0.83의 정확도를 보임.
-    - 할것 ! inception사이에서 전해주기전에 dropout을 적용 후 train upsample dataset으로 돌리기
-    - 할것 ! dropout된 모델을 full upsample dataset으로 돌리기
-    - 할것 ! image aug를 사각형으로 만들것
+    - 두번째 모들의 빠른 overfitting으로 다음 인셉션에 전달되기 전에 모든 값에 dropout 0.3을 부여후 전달. epoch이 많아지니 결국에는 과적합으로 간다. 정확도는 0.7333 -->
+    - 세번째 validation data를 image aug에서도 제외하고 train data300장을 가지고 augmetation을 통해 train 1300장 valid 400장 정도를 가지고 실험 ==> dropout과 batchnorm을 모두 적용했지만 overftting이 강하게 나타남 모델자체가 깊어서 그런것 같아 Alexnet으로 실험 재개
  
  ## 그외 파라미터 조정
  
- ### seed값을 조정해봄
+    1.seed값을 조정해봄
  
- ### threshold를 조정해봄 기존 0.5에서 0.4~0.6사이값으로 조정
+    2.threshold를 조정해봄 기존 0.5에서 0.4~0.6사이값으로 조정
