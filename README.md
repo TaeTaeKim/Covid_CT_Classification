@@ -42,7 +42,7 @@
     
     - GoogLeNet에서 다시 AlexNet의 깊지 않은 모델로 넘어와 학습재개
         1. Alex모델 수정없이 + Test set만 augmetation함. ==> 여전히 과적합으로 validation loss가 올라가지 않음.
-        2. Alex모델 수정(batchnorm,dropout) + Test set만 aug
+        2. Alex모델 수정(batchnorm,dropout) + Test set만 aug ==> 과적합 잡히지 않음.
 
 ### GoogLeNet:
     - 역시 num class와 loss를 동일하게 설정, aux1,aux2 loss에 0.3의 가중치를 놓고 train loss를 계산
