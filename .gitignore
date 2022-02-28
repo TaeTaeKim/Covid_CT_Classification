@@ -4,3 +4,5 @@ newimg
 newimg2
 *.pt
 newimg3
+/test
+/train
